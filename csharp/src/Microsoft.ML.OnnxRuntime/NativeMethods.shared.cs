@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace Microsoft.ML.OnnxRuntime
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct OrtApiBase
+    public class OrtApiBase
     {
         public IntPtr GetApi;
         public IntPtr GetVersionString;
@@ -17,7 +17,7 @@ namespace Microsoft.ML.OnnxRuntime
     // OrtApi ort_api_1_to_<latest_version> (onnxruntime/core/session/onnxruntime_c_api.cc)
     // If syncing your new C API, any other C APIs before yours also need to be synced here if haven't
     [StructLayout(LayoutKind.Sequential)]
-    public struct OrtApi
+    public class OrtApi
     {
         public IntPtr CreateStatus;
         public IntPtr GetErrorCode;
@@ -301,7 +301,7 @@ namespace Microsoft.ML.OnnxRuntime
         static OrtApi api_;
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        public delegate ref OrtApi DOrtGetApi(UInt32 version);
+        public delegate OrtApi DOrtGetApi(UInt32 version);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         public delegate IntPtr DOrtGetVersionString();
@@ -530,7 +530,7 @@ namespace Microsoft.ML.OnnxRuntime
         }
 
         [DllImport(NativeLib.DllName, CharSet = CharSet.Ansi)]
-        public static extern ref OrtApiBase OrtGetApiBase();
+        public static extern OrtApiBase OrtGetApiBase();
 
         #region Runtime/Environment API
 
