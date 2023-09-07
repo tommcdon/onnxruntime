@@ -49,7 +49,7 @@ namespace Microsoft.ML.OnnxRuntime
             static IntPtr trainingApiPtr;
 
             [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-            public delegate ref OrtApi DOrtGetApi(UInt32 version);
+            public delegate OrtApi DOrtGetApi(UInt32 version);
 
             [UnmanagedFunctionPointer(CallingConvention.Winapi)]
             public delegate IntPtr /* OrtTrainingApi* */ DOrtGetTrainingApi(UInt32 version);
