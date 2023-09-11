@@ -49,7 +49,7 @@ namespace Microsoft.ML.OnnxRuntime
             static IntPtr trainingApiPtr;
 
             [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-            public delegate OrtApi DOrtGetApi(UInt32 version);
+            public delegate IntPtr DOrtGetApi(UInt32 version);
 
             [UnmanagedFunctionPointer(CallingConvention.Winapi)]
             public delegate IntPtr /* OrtTrainingApi* */ DOrtGetTrainingApi(UInt32 version);
@@ -57,10 +57,15 @@ namespace Microsoft.ML.OnnxRuntime
 
         static NativeTrainingMethods()
             {
-                DOrtGetApi OrtGetApi = (DOrtGetApi)Marshal.GetDelegateForFunctionPointer(NativeMethods.OrtGetApiBase().GetApi, typeof(DOrtGetApi));
+                //DOrtGetApi OrtGetApi = (DOrtGetApi)Marshal.GetDelegateForFunctionPointer(NativeMethods.OrtGetApiBase().GetApi, typeof(DOrtGetApi));
+                IntPtr ortApiBasePtr = NativeMethods.OrtGetApiBase();
+                OrtApiBase ortApiBase = (OrtApiBase)Marshal.PtrToStructure(ortApiBasePtr, typeof(OrtApiBase));
+                DOrtGetApi OrtGetApi = (DOrtGetApi)Marshal.GetDelegateForFunctionPointer(ortApiBase.GetApi, typeof(DOrtGetApi));
 
                 // TODO: Make this save the pointer, and not copy the whole structure across
-                api_ = (OrtApi)OrtGetApi(13 /*ORT_API_VERSION*/);
+                //api_ = (OrtApi)OrtGetApi(13 /*ORT_API_VERSION*/);
+                IntPtr ortApiPtr = OrtGetApi(14 /*ORT_API_VERSION*/);
+                api_ = (OrtApi)Marshal.PtrToStructure(ortApiPtr, typeof(OrtApi));
 
                 OrtGetTrainingApi = (DOrtGetTrainingApi)Marshal.GetDelegateForFunctionPointer(api_.GetTrainingApi, typeof(DOrtGetTrainingApi));
                 trainingApiPtr = OrtGetTrainingApi(13 /*ORT_API_VERSION*/);

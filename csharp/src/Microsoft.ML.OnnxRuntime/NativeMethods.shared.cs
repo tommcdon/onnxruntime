@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace Microsoft.ML.OnnxRuntime
 {
     [StructLayout(LayoutKind.Sequential)]
-    public class OrtApiBase
+    public struct OrtApiBase
     {
         public IntPtr GetApi;
         public IntPtr GetVersionString;
@@ -17,7 +17,7 @@ namespace Microsoft.ML.OnnxRuntime
     // OrtApi ort_api_1_to_<latest_version> (onnxruntime/core/session/onnxruntime_c_api.cc)
     // If syncing your new C API, any other C APIs before yours also need to be synced here if haven't
     [StructLayout(LayoutKind.Sequential)]
-    public class OrtApi
+    public struct OrtApi
     {
         public IntPtr CreateStatus;
         public IntPtr GetErrorCode;
@@ -294,7 +294,7 @@ namespace Microsoft.ML.OnnxRuntime
         static OrtApi api_;
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        public delegate OrtApi DOrtGetApi(UInt32 version);
+        public delegate IntPtr DOrtGetApi(UInt32 version);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         public delegate IntPtr DOrtGetVersionString();
@@ -303,11 +303,14 @@ namespace Microsoft.ML.OnnxRuntime
 
         static NativeMethods()
         {
-            DOrtGetApi OrtGetApi = (DOrtGetApi)Marshal.GetDelegateForFunctionPointer(OrtGetApiBase().GetApi, typeof(DOrtGetApi));
+            IntPtr ortApiBasePtr = OrtGetApiBase();
+            OrtApiBase ortApiBase = (OrtApiBase)Marshal.PtrToStructure(ortApiBasePtr, typeof(OrtApiBase));
+            DOrtGetApi OrtGetApi = (DOrtGetApi)Marshal.GetDelegateForFunctionPointer(ortApiBase.GetApi, typeof(DOrtGetApi));
 
             // TODO: Make this save the pointer, and not copy the whole structure across
-            api_ = (OrtApi)OrtGetApi(14 /*ORT_API_VERSION*/);
-            OrtGetVersionString = (DOrtGetVersionString)Marshal.GetDelegateForFunctionPointer(OrtGetApiBase().GetVersionString, typeof(DOrtGetVersionString));
+            IntPtr ortApiPtr = OrtGetApi(14 /*ORT_API_VERSION*/);
+            api_ = (OrtApi)Marshal.PtrToStructure(ortApiPtr, typeof(OrtApi));
+            OrtGetVersionString = (DOrtGetVersionString)Marshal.GetDelegateForFunctionPointer(ortApiBase.GetVersionString, typeof(DOrtGetVersionString));
 
             OrtCreateEnv = (DOrtCreateEnv)Marshal.GetDelegateForFunctionPointer(api_.CreateEnv, typeof(DOrtCreateEnv));
             OrtCreateEnvWithCustomLogger = (DOrtCreateEnvWithCustomLogger)Marshal.GetDelegateForFunctionPointer(api_.CreateEnvWithCustomLogger, typeof(DOrtCreateEnvWithCustomLogger));
@@ -509,7 +512,7 @@ namespace Microsoft.ML.OnnxRuntime
         }
 
         [DllImport(NativeLib.DllName, CharSet = CharSet.Ansi)]
-        public static extern OrtApiBase OrtGetApiBase();
+        public static extern IntPtr OrtGetApiBase();
 
         #region Runtime/Environment API
 
